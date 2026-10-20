@@ -1,0 +1,662 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>CBT Mock Test Creator</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;font-family:Arial,sans-serif;background:#f1f5f9;color:#1e293b}
+header{background:#123b70;color:white;text-align:center;padding:22px}
+header h1{margin:0 0 8px}
+main{max-width:1100px;margin:25px auto;padding:0 15px}
+.panel{background:white;padding:22px;border-radius:12px;margin-bottom:18px;box-shadow:0 3px 12px #0000000b}
+h2,h3{margin-top:0}
+label{display:block;font-weight:bold;margin:12px 0 6px}
+input,select,textarea{width:100%;padding:11px;border:1px solid #cbd5e1;border-radius:7px;font:inherit}
+textarea{min-height:85px;resize:vertical}
+button{padding:11px 15px;border:0;border-radius:7px;background:#185abd;color:white;font-weight:bold;cursor:pointer;margin:4px 3px 4px 0}
+button:hover{filter:brightness(.93)}
+.secondary{background:#e5edf8;color:#17365f}
+.danger{background:#c73535}
+.success{background:#16834a}
+.warning{background:#a96300}
+.hidden{display:none!important}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+.stats{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:10px;margin:16px 0}
+.stat{background:#edf4ff;border-radius:8px;padding:14px;text-align:center}
+.stat strong{display:block;font-size:23px;margin-top:7px}
+.note{color:#64748b;font-size:13px;line-height:1.5}
+.question-card{border:1px solid #dce3ed;border-radius:9px;padding:15px;margin:12px 0;overflow-wrap:anywhere}
+.question-card p{white-space:pre-wrap}
+.pill{display:inline-block;background:#eaf1ff;color:#174a99;padding:5px 9px;border-radius:20px;font-size:12px}
+.exam-layout{display:grid;grid-template-columns:minmax(0,1fr) 270px;gap:16px}
+.exam-top{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap}
+.timer{font-size:24px;font-weight:bold;color:#b42323;background:#fff0f0;padding:10px 15px;border-radius:8px}
+.option{display:flex;gap:10px;align-items:flex-start;border:1px solid #dce3ed;padding:13px;border-radius:8px;margin:10px 0;cursor:pointer;font-weight:normal}
+.option input{width:auto;margin-top:3px}
+.palette{display:grid;grid-template-columns:repeat(5,minmax(0,1fr));gap:7px;margin:12px 0}
+.palette button{width:100%;aspect-ratio:1;padding:2px;margin:0;background:#edf1f6;color:#263548;border:1px solid #cbd5e1}
+.palette button.answered{background:#bce8ca}
+.palette button.review{background:#ead7ff}
+.palette button.answered-review{background:#ead7ff;border:2px solid #16834a}
+.palette button.current{outline:3px solid #185abd}
+.actions{display:flex;justify-content:space-between;gap:8px;flex-wrap:wrap;margin-top:18px}
+footer{text-align:center;padding:20px;color:#64748b;font-size:12px}
+@media(max-width:700px){.grid,.exam-layout{grid-template-columns:1fr}.stats{grid-template-columns:repeat(2,minmax(0,1fr))}.panel{padding:15px}}
+</style>
+</head>
+<body>
+<header>
+<h1>CBT Mock Test Creator</h1>
+<p>Create, practise and review computer-based mock exams</p>
+</header>
+
+<main>
+<section id="builderPage">
+<div class="panel">
+<h2>Create Your Exam</h2>
+<label for="examName">Exam name</label>
+<input id="examName" placeholder="e.g. NEET Practice Test">
+<div class="grid">
+<div><label for="duration">Duration (minutes)</label><input id="duration" type="number" min="1" max="600" value="60"></div>
+<div><label for="subject">Subject</label><input id="subject" placeholder="e.g. Biology"></div>
+<div><label for="correctMarks">Marks for correct answer</label><input id="correctMarks" type="number" min="0" max="100" value="4"></div>
+<div><label for="negativeMarks">Marks deducted for wrong answer</label><input id="negativeMarks" type="number" min="0" max="100" value="1"></div>
+</div>
+<p class="note">Set the marking scheme for your exam. Check the official exam rules before using it for practice.</p>
+</div>
+
+<div class="panel">
+<h2 id="editorHeading">Add a Question</h2>
+<label for="questionText">Question text</label>
+<textarea id="questionText" placeholder="Type your question here"></textarea>
+<label for="optionA">Option A</label><input id="optionA" placeholder="Enter option A">
+<label for="optionB">Option B</label><input id="optionB" placeholder="Enter option B">
+<label for="optionC">Option C</label><input id="optionC" placeholder="Enter option C">
+<label for="optionD">Option D</label><input id="optionD" placeholder="Enter option D">
+<label for="correctAnswer">Correct answer</label>
+<select id="correctAnswer">
+<option value="0">Option A</option>
+<option value="1">Option B</option>
+<option value="2">Option C</option>
+<option value="3">Option D</option>
+</select>
+<label for="explanation">Explanation (optional)</label>
+<textarea id="explanation" placeholder="Explain the answer"></textarea>
+<button id="saveQuestionBtn">Add Question</button>
+<button id="cancelEditBtn" class="secondary hidden">Cancel Edit</button>
+<button id="clearFormBtn" class="secondary">Clear Fields</button>
+</div>
+
+<div class="panel">
+<h2>Your Question List</h2>
+<div class="stats">
+<div class="stat">Total Questions<strong id="questionCount">0</strong></div>
+<div class="stat">Duration<strong id="durationSummary">60 min</strong></div>
+<div class="stat">Correct Marks<strong id="marksSummary">+4</strong></div>
+<div class="stat">Wrong Marks<strong id="negativeSummary">-1</strong></div>
+</div>
+<p class="note">When you add a question, it should appear below as Question 1, Question 2, and so on. Use Edit or Delete to manage your questions.</p>
+<div id="savedQuestions"><p class="note">No questions added yet.</p></div>
+<hr>
+<button id="startExamBtn" class="success">Start Mock Test</button>
+<button id="saveDraftBtn" class="secondary">Save Exam in Browser</button>
+<button id="exportBtn" class="secondary">Export Exam JSON</button>
+<button id="importBtn" class="secondary">Import Exam JSON</button>
+<input id="importFile" type="file" accept=".json,application/json" class="hidden">
+<p class="note">Browser saving is local to this browser. Export a JSON backup to transfer an exam to another device.</p>
+</div>
+</section>
+
+<section id="examPage" class="hidden">
+<div class="panel exam-top">
+<div><h2 id="liveExamName">Mock Test</h2><span id="liveExamSubject" class="note"></span></div>
+<div><div class="note">Time remaining</div><div id="timer" class="timer">60:00</div></div>
+</div>
+<div class="exam-layout">
+<div class="panel">
+<div class="exam-top"><h3 id="questionHeading">Question 1</h3><span id="questionStatus" class="pill">Not answered</span></div>
+<p id="liveQuestionText" style="white-space:pre-wrap;line-height:1.7"></p>
+<div id="liveOptions"></div>
+<div class="actions">
+<button id="markReviewBtn" class="warning">Mark for Review</button>
+<button id="clearAnswerBtn" class="secondary">Clear Response</button>
+</div>
+<hr style="border:0;border-top:1px solid #dce3ed;margin:20px 0">
+<div class="actions">
+<button id="previousBtn" class="secondary">Previous</button>
+<button id="nextBtn">Save &amp; Next</button>
+</div>
+</div>
+<aside class="panel">
+<h3>Question Palette</h3>
+<p class="note">Select any question number to visit it.</p>
+<div id="questionPalette" class="palette"></div>
+<p class="note">Green = answered · Purple = review · Grey = unanswered</p>
+<p>Answered: <strong id="answeredCount">0</strong></p>
+<p>Not answered: <strong id="unansweredCount">0</strong></p>
+<p>Marked for review: <strong id="reviewCount">0</strong></p>
+<button id="submitExamBtn" class="danger" style="width:100%">Submit Exam</button>
+</aside>
+</div>
+</section>
+
+<section id="resultsPage" class="hidden">
+<div class="panel">
+<h2>Exam Results</h2>
+<p id="resultExamName"></p>
+<div class="stats">
+<div class="stat">Score<strong id="resultScore">0</strong></div>
+<div class="stat">Correct<strong id="resultCorrect">0</strong></div>
+<div class="stat">Incorrect<strong id="resultWrong">0</strong></div>
+<div class="stat">Unanswered<strong id="resultUnanswered">0</strong></div>
+</div>
+<p id="resultPercentage"></p>
+<p id="resultMessage"></p>
+<button id="reviewResultsBtn">Review Answers</button>
+<button id="backToBuilderBtn" class="secondary">Back to Exam Creator</button>
+</div>
+<div id="answerReview" class="panel hidden">
+<h2>Answer Review</h2>
+<div id="reviewList"></div>
+</div>
+</section>
+</main>
+<footer>CBT Mock Test Creator · Your exam data stays in this browser unless you export it.</footer>
+
+<script>
+"use strict";
+
+const $ = id => document.getElementById(id);
+let questions = [];
+let editingIndex = -1;
+let currentIndex = 0;
+let answers = [];
+let reviewFlags = [];
+let remainingSeconds = 0;
+let timerInterval = null;
+let examActive = false;
+let lastResults = null;
+
+function showPage(id) {
+    ["builderPage","examPage","resultsPage"].forEach(page =>
+        $(page).classList.toggle("hidden", page !== id)
+    );
+    window.scrollTo(0,0);
+}
+
+function settings() {
+    const duration = Number($("duration").value);
+    const correctMarks = Number($("correctMarks").value);
+    const negativeMarks = Number($("negativeMarks").value);
+
+    if (!Number.isFinite(duration) || duration < 1 || duration > 600)
+        throw Error("Duration must be between 1 and 600 minutes.");
+    if (!Number.isFinite(correctMarks) || correctMarks < 0 || correctMarks > 100)
+        throw Error("Correct marks must be between 0 and 100.");
+    if (!Number.isFinite(negativeMarks) || negativeMarks < 0 || negativeMarks > 100)
+        throw Error("Wrong-answer deduction must be between 0 and 100.");
+
+    return {
+        name: $("examName").value.trim() || "My Mock Test",
+        subject: $("subject").value.trim(),
+        duration, correctMarks, negativeMarks
+    };
+}
+
+function makeText(parent, tag, text, className) {
+    const el = document.createElement(tag);
+    el.textContent = text;
+    if (className) el.className = className;
+    parent.appendChild(el);
+    return el;
+}
+
+function updateSummary() {
+    $("questionCount").textContent = questions.length;
+    $("durationSummary").textContent = ($("duration").value || 0) + " min";
+    $("marksSummary").textContent = "+" + ($("correctMarks").value || 0);
+    $("negativeSummary").textContent = "-" + ($("negativeMarks").value || 0);
+}
+
+function clearForm() {
+    ["questionText","optionA","optionB","optionC","optionD","explanation"]
+        .forEach(id => $(id).value = "");
+    $("correctAnswer").value = "0";
+    editingIndex = -1;
+    $("editorHeading").textContent = "Add a Question";
+    $("saveQuestionBtn").textContent = "Add Question";
+    $("cancelEditBtn").classList.add("hidden");
+}
+
+function renderQuestions() {
+    const list = $("savedQuestions");
+    list.replaceChildren();
+
+    if (!questions.length) {
+        makeText(list,"p","No questions added yet. Add your first question above.","note");
+        updateSummary();
+        return;
+    }
+
+    questions.forEach((q,index) => {
+        const card = document.createElement("div");
+        card.className = "question-card";
+        makeText(card,"span","Question " + (index+1),"pill");
+        makeText(card,"p",q.text);
+
+        q.options.forEach((option,i) => {
+            makeText(card,"p",
+                String.fromCharCode(65+i) + ". " + option +
+                (i === q.correct ? " ✓ (Correct)" : ""));
+        });
+
+        if (q.explanation)
+            makeText(card,"p","Explanation: " + q.explanation,"note");
+
+        const edit = document.createElement("button");
+        edit.textContent = "Edit";
+        edit.className = "secondary";
+        edit.onclick = () => editQuestion(index);
+
+        const del = document.createElement("button");
+        del.textContent = "Delete Question";
+        del.className = "danger";
+        del.onclick = () => deleteQuestion(index);
+
+        card.append(edit,del);
+        list.appendChild(card);
+    });
+
+    updateSummary();
+}
+
+function addQuestion() {
+    const text = $("questionText").value.trim();
+    const options = ["optionA","optionB","optionC","optionD"]
+        .map(id => $(id).value.trim());
+
+    if (!text || options.some(option => !option)) {
+        alert("Please fill in the question and all four options.");
+        return;
+    }
+
+    const q = {
+        text,
+        options,
+        correct: Number($("correctAnswer").value),
+        explanation: $("explanation").value.trim()
+    };
+
+    if (editingIndex >= 0) questions[editingIndex] = q;
+    else questions.push(q);
+
+    clearForm();
+    renderQuestions();
+    saveDraft(false);
+}
+
+function editQuestion(index) {
+    const q = questions[index];
+    $("questionText").value = q.text;
+    ["optionA","optionB","optionC","optionD"].forEach((id,i) => {
+        $(id).value = q.options[i];
+    });
+    $("correctAnswer").value = String(q.correct);
+    $("explanation").value = q.explanation || "";
+    editingIndex = index;
+    $("editorHeading").textContent = "Edit Question " + (index+1);
+    $("saveQuestionBtn").textContent = "Save Changes";
+    $("cancelEditBtn").classList.remove("hidden");
+    $("editorHeading").scrollIntoView({behavior:"smooth",block:"center"});
+}
+
+function deleteQuestion(index) {
+    if (!confirm("Delete Question " + (index+1) + "?")) return;
+    questions.splice(index,1);
+    if (editingIndex === index) clearForm();
+    else if (editingIndex > index) editingIndex--;
+    renderQuestions();
+    saveDraft(false);
+}
+
+function examData() {
+    return {version:1,settings:settings(),questions};
+}
+
+function loadExam(data) {
+    if (!data || !data.settings || !Array.isArray(data.questions))
+        throw Error("This is not a valid exam file.");
+
+    const loaded = data.questions.map(q => {
+        if (!q || typeof q.text !== "string" ||
+            !Array.isArray(q.options) || q.options.length !== 4 ||
+            !q.options.every(o => typeof o === "string") ||
+            !Number.isInteger(q.correct) || q.correct < 0 || q.correct > 3)
+            throw Error("The file contains an invalid question.");
+
+        return {
+            text:q.text,
+            options:q.options,
+            correct:q.correct,
+            explanation:typeof q.explanation === "string" ? q.explanation : ""
+        };
+    });
+
+    const s = data.settings;
+    $("examName").value = s.name || "";
+    $("subject").value = s.subject || "";
+    $("duration").value = s.duration || 60;
+    $("correctMarks").value = s.correctMarks ?? 4;
+    $("negativeMarks").value = s.negativeMarks ?? 1;
+
+    questions = loaded;
+    clearForm();
+    updateSummary();
+    renderQuestions();
+}
+
+function saveDraft(showMessage=true) {
+    try {
+        localStorage.setItem("cbtMockTestDraft",JSON.stringify(examData()));
+        if (showMessage) alert("Exam saved in this browser.");
+    } catch (error) {
+        if (showMessage) alert("Could not save. Check your exam settings and browser storage.");
+    }
+}
+
+function exportExam() {
+    try {
+        const data = examData();
+        const blob = new Blob([JSON.stringify(data,null,2)],{type:"application/json"});
+        const url = URL.createObjectURL(blob);
+        const link = document.createElement("a");
+        link.href = url;
+        link.download = (data.settings.name.replace(/[^a-z0-9_-]/gi,"_") || "mock-exam") + ".json";
+        link.click();
+        setTimeout(() => URL.revokeObjectURL(url),1000);
+    } catch(error) {
+        alert(error.message);
+    }
+}
+
+function importExam(file) {
+    if (!file) return;
+    const reader = new FileReader();
+    reader.onload = () => {
+        try {
+            loadExam(JSON.parse(reader.result));
+            saveDraft(false);
+            alert("Exam imported successfully.");
+        } catch(error) {
+            alert("Import failed: " + error.message);
+        }
+        $("importFile").value = "";
+    };
+    reader.onerror = () => alert("Could not read that file.");
+    reader.readAsText(file);
+}
+
+function startExam() {
+    if (!questions.length) {
+        alert("Please add at least one question first.");
+        return;
+    }
+
+    let s;
+    try { s = settings(); }
+    catch(error) { alert(error.message); return; }
+
+    if (!confirm("Start " + s.name + " with " + questions.length +
+        " questions for " + s.duration + " minutes?")) return;
+
+    answers = questions.map(() => null);
+    reviewFlags = questions.map(() => false);
+    currentIndex = 0;
+    remainingSeconds = s.duration * 60;
+    examActive = true;
+    lastResults = null;
+
+    $("liveExamName").textContent = s.name;
+    $("liveExamSubject").textContent = s.subject
+        ? "Subject: " + s.subject
+        : questions.length + " questions";
+
+    showPage("examPage");
+    renderCurrentQuestion();
+    renderPalette();
+    updateCounts();
+    updateTimer();
+
+    clearInterval(timerInterval);
+    timerInterval = setInterval(() => {
+        if (!examActive) return;
+        remainingSeconds--;
+        updateTimer();
+        if (remainingSeconds <= 0) finishExam(true);
+    },1000);
+}
+
+function updateTimer() {
+    const seconds = Math.max(0,remainingSeconds);
+    $("timer").textContent =
+        String(Math.floor(seconds/60)).padStart(2,"0") + ":" +
+        String(seconds%60).padStart(2,"0");
+}
+
+function renderCurrentQuestion() {
+    const q = questions[currentIndex];
+    $("questionHeading").textContent =
+        "Question " + (currentIndex+1) + " of " + questions.length;
+    $("liveQuestionText").textContent = q.text;
+
+    $("questionStatus").textContent =
+        reviewFlags[currentIndex] && answers[currentIndex] !== null
+        ? "Answered · Marked for review"
+        : reviewFlags[currentIndex] ? "Marked for review"
+        : answers[currentIndex] !== null ? "Answered" : "Not answered";
+
+    const container = $("liveOptions");
+    container.replaceChildren();
+
+    q.options.forEach((option,i) => {
+        const label = document.createElement("label");
+        label.className = "option";
+
+        const radio = document.createElement("input");
+        radio.type = "radio";
+        radio.name = "examAnswer";
+        radio.value = String(i);
+        radio.checked = answers[currentIndex] === i;
+        radio.addEventListener("change",() => {
+            answers[currentIndex] = i;
+            renderCurrentQuestion();
+            renderPalette();
+            updateCounts();
+        });
+
+        label.appendChild(radio);
+        makeText(label,"span",String.fromCharCode(65+i) + ". " + option);
+        container.appendChild(label);
+    });
+
+    $("previousBtn").disabled = currentIndex === 0;
+    $("nextBtn").textContent =
+        currentIndex === questions.length-1 ? "Save Response" : "Save & Next";
+    $("markReviewBtn").textContent =
+        reviewFlags[currentIndex] ? "Unmark Review" : "Mark for Review";
+}
+
+function renderPalette() {
+    const palette = $("questionPalette");
+    palette.replaceChildren();
+
+    questions.forEach((q,index) => {
+        const button = document.createElement("button");
+        button.textContent = index+1;
+
+        if (answers[index] !== null && reviewFlags[index])
+            button.classList.add("answered-review");
+        else if (answers[index] !== null)
+            button.classList.add("answered");
+        else if (reviewFlags[index])
+            button.classList.add("review");
+
+        if (index === currentIndex) button.classList.add("current");
+
+        button.title = "Go to Question " + (index+1);
+        button.onclick = () => {
+            currentIndex = index;
+            renderCurrentQuestion();
+            renderPalette();
+        };
+        palette.appendChild(button);
+    });
+}
+
+function updateCounts() {
+    $("answeredCount").textContent = answers.filter(a => a !== null).length;
+    $("unansweredCount").textContent = answers.filter(a => a === null).length;
+    $("reviewCount").textContent = reviewFlags.filter(Boolean).length;
+}
+
+function nextQuestion() {
+    if (currentIndex < questions.length-1) currentIndex++;
+    renderCurrentQuestion();
+    renderPalette();
+    updateCounts();
+}
+
+function previousQuestion() {
+    if (currentIndex > 0) currentIndex--;
+    renderCurrentQuestion();
+    renderPalette();
+}
+
+function finishExam(timeExpired=false) {
+    if (!examActive) return;
+
+    if (!timeExpired) {
+        const answered = answers.filter(a => a !== null).length;
+        if (!confirm("Submit your exam?\nAnswered: " + answered +
+            "\nUnanswered: " + (questions.length-answered))) return;
+    }
+
+    examActive = false;
+    clearInterval(timerInterval);
+
+    const s = settings();
+    let correct = 0, wrong = 0, unanswered = 0, score = 0;
+
+    questions.forEach((q,i) => {
+        if (answers[i] === null) unanswered++;
+        else if (answers[i] === q.correct) {
+            correct++;
+            score += s.correctMarks;
+        } else {
+            wrong++;
+            score -= s.negativeMarks;
+        }
+    });
+
+    const maximum = questions.length*s.correctMarks;
+    const percentage = maximum > 0 ? score/maximum*100 : 0;
+    lastResults = {correct,wrong,unanswered,score,maximum,percentage};
+
+    $("resultExamName").textContent = s.name + (timeExpired ? " — Time expired" : "");
+    $("resultScore").textContent = score;
+    $("resultCorrect").textContent = correct;
+    $("resultWrong").textContent = wrong;
+    $("resultUnanswered").textContent = unanswered;
+    $("resultPercentage").textContent =
+        "Percentage of maximum possible marks: " + percentage.toFixed(1) + "%";
+    $("resultMessage").textContent =
+        "You answered " + (correct+wrong) + " of " + questions.length + " questions.";
+
+    $("answerReview").classList.add("hidden");
+    showPage("resultsPage");
+}
+
+function showAnswerReview() {
+    const list = $("reviewList");
+    list.replaceChildren();
+
+    questions.forEach((q,i) => {
+        const card = document.createElement("div");
+        card.className = "question-card";
+        makeText(card,"h3","Question " + (i+1));
+        makeText(card,"p",q.text);
+
+        q.options.forEach((option,j) => {
+            let label = String.fromCharCode(65+j) + ". " + option;
+            if (j === q.correct) label += " ✓ Correct answer";
+            if (answers[i] === j) label += " — Your answer";
+            makeText(card,"p",label);
+        });
+
+        if (answers[i] === null)
+            makeText(card,"p","Your response: Not answered");
+        else if (answers[i] !== q.correct)
+            makeText(card,"p","Your response was incorrect.");
+
+        if (q.explanation)
+            makeText(card,"p","Explanation: " + q.explanation);
+
+        list.appendChild(card);
+    });
+
+    $("answerReview").classList.remove("hidden");
+    $("answerReview").scrollIntoView({behavior:"smooth"});
+}
+
+$("saveQuestionBtn").addEventListener("click",addQuestion);
+$("cancelEditBtn").addEventListener("click",clearForm);
+$("clearFormBtn").addEventListener("click",clearForm);
+$("startExamBtn").addEventListener("click",startExam);
+$("saveDraftBtn").addEventListener("click",() => saveDraft(true));
+$("exportBtn").addEventListener("click",exportExam);
+$("importBtn").addEventListener("click",() => $("importFile").click());
+$("importFile").addEventListener("change",event => importExam(event.target.files[0]));
+
+["duration","correctMarks","negativeMarks"].forEach(id =>
+    $(id).addEventListener("input",updateSummary)
+);
+
+$("previousBtn").addEventListener("click",previousQuestion);
+$("nextBtn").addEventListener("click",nextQuestion);
+$("markReviewBtn").addEventListener("click",() => {
+    reviewFlags[currentIndex] = !reviewFlags[currentIndex];
+    renderCurrentQuestion();
+    renderPalette();
+    updateCounts();
+});
+$("clearAnswerBtn").addEventListener("click",() => {
+    answers[currentIndex] = null;
+    renderCurrentQuestion();
+    renderPalette();
+    updateCounts();
+});
+$("submitExamBtn").addEventListener("click",() => finishExam(false));
+$("reviewResultsBtn").addEventListener("click",showAnswerReview);
+$("backToBuilderBtn").addEventListener("click",() => showPage("builderPage"));
+
+try {
+    const draft = localStorage.getItem("cbtMockTestDraft");
+    if (draft) {
+        loadExam(JSON.parse(draft));
+    } else {
+        updateSummary();
+        renderQuestions();
+    }
+} catch(error) {
+    questions = [];
+    updateSummary();
+    renderQuestions();
+}
+
+showPage("builderPage");
+</script>
+</body>
+</html>
