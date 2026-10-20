@@ -1,0 +1,11 @@
+
+{
+  "name": "CBT Mock Test Creator",
+  "short_name": "CBT Mock Test",
+  "description": "Create and take mock tests offline",
+  "start_url": "./index.html",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb"
+}
